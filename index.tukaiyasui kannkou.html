@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>青空市 観光ガイド</title>
+  <style>
+    /* リセット & 基本設定 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f7f9;
+      color: #333333;
+      line-height: 1.6;
+      padding-bottom: 75px; /* 下部メニュー分の余白 */
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* ヘッダー */
+    header {
+      background: linear-gradient(135deg, #0088cc, #42b6ff);
+      color: #fff;
+      padding: 14px 16px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    /* コンテナ */
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* ページ切り替え制御 */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 見出し共通 */
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #006699;
+    }
+
+    /* ヒーローエリア */
+    .hero {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.06);
+    }
+    .hero img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+    .hero-text {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 14px;
+      background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
+      color: #ffffff;
+    }
+    .hero-text p {
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    /* カテゴリーグリッド（トップ用） */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      background: #ffffff;
+      padding: 12px 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+    .cat-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .cat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #e6f4ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+      transition: transform 0.1s;
+    }
+    .cat-btn:active .cat-icon {
+      transform: scale(0.92);
+    }
+    .cat-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #444;
+    }
+
+    /* お知らせ（カード型） */
+    .notice-card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      border-left: 4px solid #0088cc;
+    }
+    .notice-item {
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+    .notice-item:last-child {
+      margin-bottom: 0;
+    }
+    .notice-date {
+      font-size: 0.75rem;
+      color: #888;
+      margin-right: 6px;
+    }
+
+    /* スポット・情報カード */
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+      display: flex;
+    }
+    .card img {
+      width: 105px;
+      height: 85px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .card-body {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 3px;
+    }
+    .card-desc {
+      font-size: 0.78rem;
+      color: #666;
+      line-height: 1.35;
+    }
+
+    /* 下部固定ナビゲーションバー */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #e0e0e0;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.05);
+      z-index: 200;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      background: none;
+      border: none;
+      color: #777;
+      padding: 6px 0;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .nav-item .icon {
+      font-size: 1.2rem;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .nav-item.active {
+      color: #0088cc;
+    }
+
+    /* サブページ用のヘッダー・戻るボタン */
+    .subpage-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e1e7ec;
+    }
+    .btn-back {
+      background: #eef2f5;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #006699;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .subpage-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- トップヘッダー -->
+  <header>
+    <h1 id="headerTitle">青空市 観光ガイド</h1>
+    <div style="font-size: 0.7rem; opacity: 0.9; margin-top: 2px;">※これは架空のWebページです。</div>
+  </header>
+
+  <main class="container">
+
+    <!-- 1. トップページ -->
+    <div id="page-home" class="page active">
+      
+      <!-- メインビジュアル -->
+      <div class="hero">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" alt="青空市の風景">
+        <div class="hero-text">
+          <p>海と風を感じる街、青空市へようこそ。</p>
+        </div>
+      </div>
+
+      <!-- カテゴリーボタン一覧 -->
+      <section>
+        <div class="section-title"><span>📂</span> カテゴリー</div>
+        <div class="cat-grid">
+          <button class="cat-btn" onclick="navigateTo('page-kankou')">
+            <div class="cat-icon">🏖️</div>
+            <span class="cat-label">観光</span>
+          </button>
+          <button class="cat-btn" onclick="navigateTo('page-yado')">
+            <div class="cat-icon">🏨</div>
+            <span class="cat-label">宿泊</span>
+          </button>
+          <button class="cat-btn" onclick="navigateTo('page-taiken')">
+            <div class="cat-icon">🚣</div>
+            <span class="cat-label">体験</span>
+          </button>
+          <button class="cat-btn" onclick="navigateTo('page-shopping')">
+            <div class="cat-icon">🛍️</div>
+            <span class="cat-label">買い物</span>
+          </button>
+          <button class="cat-btn" onclick="navigateTo('page-gourmet')">
+            <div class="cat-icon">🍲</div>
+            <span class="cat-label">グルメ</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- お知らせ -->
+      <section>
+        <div class="section-title"><span>📢</span> お知らせ</div>
+        <div class="notice-card">
+          <div class="notice-item">
+            <span class="notice-date">2026.09.15</span><br>
+            秋の「青空マルシェ」開催日程が決まりました！
+          </div>
+          <div class="notice-item">
+            <span class="notice-date">2026.09.01</span><br>
+            レンタサイクル「あおチャリ」の割引実施中。
+          </div>
+        </div>
+      </section>
+
+      <!-- おすすめ観光情報（抜粋） -->
+      <section>
+        <div class="section-title"><span>✨</span> ピックアップ観光情報</div>
+        <div class="card" onclick="navigateTo('page-kankou')">
+          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80" alt="青空海岸">
+          <div class="card-body">
+            <div class="card-title">青空海岸通り</div>
+            <div class="card-desc">白い砂浜と澄んだ海。<br>夕暮れの散策が人気です。</div>
+          </div>
+        </div>
+        <div class="card" onclick="navigateTo('page-kankou')">
+          <img src="https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80" alt="青空の丘">
+          <div class="card-body">
+            <div class="card-title">青空の丘 展望台</div>
+            <div class="card-desc">市街地と海を一望できる<br>市内一の絶景パノラマスポット。</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 2. カテゴリー別：観光ページ -->
+    <div id="page-kankou" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">観光スポット</div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80" alt="青空海岸">
+        <div class="card-body">
+          <div class="card-title">青空海岸通り</div>
+          <div class="card-desc">透き通る海が広がるメインビーチ。<br>遊歩道の散歩がおすすめです。</div>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=300&q=80" alt="展望台">
+        <div class="card-body">
+          <div class="card-title">青空の丘 展望台</div>
+          <div class="card-desc">街と水平線を360度見渡せます。<br>夜景スポットとしても大人気。</div>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=300&q=80" alt="青空灯台">
+        <div class="card-body">
+          <div class="card-title">白亜の青空灯台</div>
+          <div class="card-desc">歴史ある洋式灯台。<br>記念撮影に最適なフォトスポット。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. カテゴリー別：宿泊ページ -->
+    <div id="page-yado" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">宿泊施設</div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=300&q=80" alt="リゾートホテル">
+        <div class="card-body">
+          <div class="card-title">青空シーサイドホテル</div>
+          <div class="card-desc">全室オーシャンビュー。<br>天然温泉の露天風呂も完備。</div>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=300&q=80" alt="温泉宿">
+        <div class="card-body">
+          <div class="card-title">汐風の宿 あおぞら亭</div>
+          <div class="card-desc">地元食材を味わう割烹旅館。<br>心安らぐ和の空間。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. カテゴリー別：体験ページ -->
+    <div id="page-taiken" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">アクティビティ・体験</div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=300&q=80" alt="SUP体験">
+        <div class="card-body">
+          <div class="card-title">青空湾 SUP・カヤック体験</div>
+          <div class="card-desc">波が穏やかで初心者も安心。<br>インストラクター同行ツアーあり。</div>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=300&q=80" alt="陶芸体験">
+        <div class="card-body">
+          <div class="card-title">海辺の陶芸・ガラス工房</div>
+          <div class="card-desc">旅の思い出作りにぴったり。<br>手びねり体験（所要60分）。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. カテゴリー別：ショッピングページ -->
+    <div id="page-shopping" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">お買い物</div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=300&q=80" alt="おみやげ館">
+        <div class="card-body">
+          <div class="card-title">青空物産館「うみまち市場」</div>
+          <div class="card-desc">朝採れ野菜や銘菓が揃う。<br>青空市限定のお土産多数。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. カテゴリー別：グルメページ -->
+    <div id="page-gourmet" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">ご当地グルメ</div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=300&q=80" alt="海鮮丼">
+        <div class="card-body">
+          <div class="card-title">名物 青空海鮮丼</div>
+          <div class="card-desc">今朝水揚げされた旬の鮮魚を贅沢に。<br>港の食堂街で味わえます。</div>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80" alt="カフェ">
+        <div class="card-body">
+          <div class="card-title">青空ブルーソーダ＆カフェ</div>
+          <div class="card-desc">海を望む絶景テラス席で<br>爽やかな特製スイーツをどうぞ。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. イベント情報ページ -->
+    <div id="page-event" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">イベント情報</div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=300&q=80" alt="秋祭り">
+        <div class="card-body">
+          <div class="card-title">秋の青空マルシェ</div>
+          <div class="card-desc">10月10日(土)〜11日(日)<br>地元飲食・クラフト作家が集合！</div>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?auto=format&fit=crop&w=300&q=80" alt="花火">
+        <div class="card-body">
+          <div class="card-title">青空ハーバー花火ナイト</div>
+          <div class="card-desc">10月24日(土) 19:30〜<br>秋の夜空を彩る幻想的な花火ショー。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. アクセスページ（架空の地名を使用） -->
+    <div id="page-access" class="page">
+      <div class="subpage-header">
+        <button class="btn-back" onclick="navigateTo('page-home')">← 戻る</button>
+        <div class="subpage-title">アクセス</div>
+      </div>
+      <div class="notice-card" style="border-left-color: #00aa66; margin-bottom: 12px;">
+        <h3 style="font-size: 0.9rem; margin-bottom: 4px;">青空市観光案内所</h3>
+        <p style="font-size: 0.8rem; color: #555;">
+          架空県 青空市 潮風町1-2-3<br>
+          TEL: 000-123-4567
+        </p>
+      </div>
+      
+      <div class="card">
+        <div class="card-body">
+          <div class="card-title">🚅 電車をご利用の場合</div>
+          <div class="card-desc">
+            ・中央新星駅より「特急あおぞら号」で約45分<br>
+            ・「JR青空駅」下車すぐ
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="card-title">🚗 お車をご利用の場合</div>
+          <div class="card-desc">
+            ・虹が丘高速「青空シーサイドIC」より約5分<br>
+            ・市営「かもめ駐車場」（1回500円 / 300台）
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="card-title">✈️ 飛行機をご利用の場合</div>
+          <div class="card-desc">
+            ・「碧海（あおうみ）空港」より連絡バスで約25分
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 画面下部に固定されたナビゲーションメニュー -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="navigateTo('page-home')">
+      <span class="icon">🏠</span>
+      トップ
+    </button>
+    <button class="nav-item" id="nav-kankou" onclick="navigateTo('page-kankou')">
+      <span class="icon">🏖️</span>
+      観光情報
+    </button>
+    <button class="nav-item" id="nav-event" onclick="navigateTo('page-event')">
+      <span class="icon">🎪</span>
+      イベント
+    </button>
+    <button class="nav-item" id="nav-access" onclick="navigateTo('page-access')">
+      <span class="icon">🗺️</span>
+      アクセス
+    </button>
+  </nav>
+
+  <script>
+    // ページ遷移処理（SPA）
+    function navigateTo(pageId) {
+      // 全ページ非表示
+      const pages = document.querySelectorAll('.page');
+      pages.forEach(p => p.classList.remove('active'));
+
+      // 指定ページを表示
+      const target = document.getElementById(pageId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      // ナビゲーションバーのactive状態を更新
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(n => n.classList.remove('active'));
+
+      if (pageId === 'page-home') {
+        document.getElementById('nav-home').classList.add('active');
+      } else if (pageId === 'page-event') {
+        document.getElementById('nav-event').classList.add('active');
+      } else if (pageId === 'page-access') {
+        document.getElementById('nav-access').classList.add('active');
+      } else {
+        // カテゴリー別ページは「観光情報」メニューをアクティブに
+        document.getElementById('nav-kankou').classList.add('active');
+      }
+
+      // ページ最上部へスクロール
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  </script>
+</body>
+</html>
